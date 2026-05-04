@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentHub — Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <style>
+    .failing-badge {
+      animation: failing-pulse 2s infinite;
+    }
+    @keyframes failing-pulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.8); }
+    }
+
+    /* Custom Scrollbar for the Empire */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #050505; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
+
+    /* Red Glow for Active Nav */
+    .nav-link.active {
+      box-shadow: inset 4px 0 0 0 #e11d48;
+      background: linear-gradient(90deg, rgba(225,29,72,0.1) 0%, rgba(0,0,0,0) 100%);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-black text-gray-900 dark:text-gray-100 font-sans">
+
+<!-- ===== TOP BAR ===== -->
+<header class="fixed top-0 left-0 right-0 z-30 h-16 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shadow-sm">
+  <div class="flex items-center gap-3">
+    <span class="text-2xl font-bold text-rose-600 dark:text-rose-400 tracking-tight">AgentHub</span>
+    <span class="text-xs bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-300 px-2 py-0.5 rounded-full font-medium">Admin</span>
+  </div>
+  <button id="darkToggle" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-sm font-medium transition-colors">
+    <span id="darkIcon"><span aria-hidden="true">🌙</span></span>
+    <span id="darkLabel">Dark Mode</span>
+  </button>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="flex pt-16 min-h-screen">
+
+  <!-- ===== SIDEBAR ===== -->
+  <nav class="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-rose-600/20 flex flex-col py-6 px-3 z-20 shadow-sm">
+    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-3 mb-3">Navigation</p>
+    <ul class="space-y-1 flex-1">
+      <li>
+        <button data-section="dashboard" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">📊</span> Dashboard
+        </button>
+      </li>
+      <li>
+        <button data-section="users" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">👥</span> User Management
+        </button>
+      </li>
+      <li>
+        <button data-section="agents" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">🤖</span> Agent Management
+        </button>
+      </li>
+      <li>
+        <button data-section="skills" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">⚡</span> Skills
+        </button>
+      </li>
+      <li>
+        <button data-section="contracts" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">📄</span> Agent Contracts
+        </button>
+      </li>
+      <li>
+        <button data-section="errors" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-rose-900/20">
+          <span aria-hidden="true">🚨</span> Error Log
+        </button>
+      </li>
+    </ul>
+    <div class="px-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+      <p class="text-xs text-gray-400 dark:text-gray-600">AgentHub v1.0.0</p>
+    </div>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="ml-64 flex-1 p-8">
+
+    <!-- ==============================
+         DASHBOARD
+    ============================== -->
+    <section id="dashboard">
+      <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-6 border-l-4 border-green-500 flex items-center gap-5">
+          <div class="text-4xl"><span aria-hidden="true">💰</span></div>
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Revenue This Month</p>
+            <p class="text-3xl font-bold text-green-600 dark:text-green-400">$48,320</p>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-6 border-l-4 border-red-500 flex items-center gap-5">
+          <div class="text-4xl"><span aria-hidden="true">🏷️</span></div>
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Discount &amp; Coupon Losses</p>
+            <p class="text-3xl font-bold text-red-500 dark:text-red-400">$3,140</p>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-6 border-l-4 border-blue-500 flex items-center gap-5">
+          <div class="text-4xl"><span aria-hidden="true">🤖</span></div>
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Active Agents</p>
+            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">87</p>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-6 border-l-4 border-orange-500 flex items-center gap-5">
+          <div class="text-4xl"><span aria-hidden="true">⚠️</span></div>
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Failing Agents</p>
+            <p class="text-3xl font-bold text-orange-500 dark:text-orange-400">5</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-700 min-h-52 flex items-center justify-center">
+        <p class="text-gray-400 dark:text-gray-600 text-sm font-medium"><span aria-hidden="true">📈</span> Weekly Activity Chart — Coming Soon</p>
+      </div>
+    </section>
+
+    <!-- ==============================
+         USER MANAGEMENT
+    ============================== -->
+    <section id="users" class="hidden">
+      <h1 class="text-2xl font-bold mb-6">User Management</h1>
+      <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-visible">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-6 py-4 text-left">Name</th>
+              <th class="px-6 py-4 text-left">Email</th>
+              <th class="px-6 py-4 text-left">Plan</th>
+              <th class="px-6 py-4 text-left">Status</th>
+              <th class="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Marta López</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">marta@acme.com</td>
+              <td class="px-6 py-4">Pro</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">Active</span></td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="user-1" aria-label="Options for Marta López">⋮</button>
+                <div id="user-1" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-user-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Marta López" data-email="marta@acme.com" data-plan="Pro" data-status="Active" data-joined="2024-01-15" data-agents="2">View detail</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Carlos Ruiz</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">carlos@techcorp.com</td>
+              <td class="px-6 py-4">Basic</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">Active</span></td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="user-2" aria-label="Options for Carlos Ruiz">⋮</button>
+                <div id="user-2" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-user-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Carlos Ruiz" data-email="carlos@techcorp.com" data-plan="Basic" data-status="Active" data-joined="2024-03-22" data-agents="1">View detail</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">James O'Brien</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">james@startup.io</td>
+              <td class="px-6 py-4">Trial</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400">Trial</span></td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="user-3" aria-label="Options for James O'Brien">⋮</button>
+                <div id="user-3" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-user-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="James O'Brien" data-email="james@startup.io" data-plan="Trial" data-status="Trial" data-joined="2025-04-10" data-agents="1">View detail</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Sarah Chen</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">sarah@globalinc.com</td>
+              <td class="px-6 py-4">Enterprise</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">Active</span></td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="user-4" aria-label="Options for Sarah Chen">⋮</button>
+                <div id="user-4" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-user-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Sarah Chen" data-email="sarah@globalinc.com" data-plan="Enterprise" data-status="Active" data-joined="2023-11-05" data-agents="3">View detail</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Diego Vargas</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">diego@nexusco.com</td>
+              <td class="px-6 py-4">Basic</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400">Suspended</span></td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="user-5" aria-label="Options for Diego Vargas">⋮</button>
+                <div id="user-5" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-user-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Diego Vargas" data-email="diego@nexusco.com" data-plan="Basic" data-status="Suspended" data-joined="2024-07-30" data-agents="0">View detail</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==============================
+         AGENT MANAGEMENT
+    ============================== -->
+    <section id="agents" class="hidden">
+      <h1 class="text-2xl font-bold mb-6">Agent Management</h1>
+      <div class="space-y-4">
+
+        <!-- Atlas -->
+        <article class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-visible">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-lg"><span aria-hidden="true">🤖</span></div>
+              <div>
+                <p class="font-semibold">Atlas</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Owner: Marta López</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">Active</span>
+              <button class="skill-toggle flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400 hover:underline" data-target="skills-atlas">
+                <span class="chevron inline-block transition-transform duration-300"><span aria-hidden="true">▶</span></span> Skills
+              </button>
+              <div class="relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="agent-atlas" aria-label="Options for Atlas">⋮</button>
+                <div id="agent-atlas" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="configure-agent-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Atlas"
+                    data-prompt="You are Atlas, an intelligent AI agent specialized in document analysis and web research. Your role is to assist clients in retrieving, reading, and summarizing information from the web and uploaded documents. Always maintain a professional, concise tone. Prioritize accuracy over speed. When uncertain, flag the information for human review.">Configure</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="skills-atlas" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height:0">
+            <div class="px-6 pb-4 pt-3 flex gap-2 flex-wrap border-t border-gray-100 dark:border-gray-800">
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">🌐</span> Web Browsing</span>
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">📄</span> Document Reader</span>
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">✉️</span> Email Composer</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Nexus -->
+        <article class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-visible">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-lg"><span aria-hidden="true">🤖</span></div>
+              <div>
+                <p class="font-semibold">Nexus</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Owner: Carlos Ruiz</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="failing-badge px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400">Failing</span>
+              <button class="skill-toggle flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400 hover:underline" data-target="skills-nexus">
+                <span class="chevron inline-block transition-transform duration-300"><span aria-hidden="true">▶</span></span> Skills
+              </button>
+              <div class="relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="agent-nexus" aria-label="Options for Nexus">⋮</button>
+                <div id="agent-nexus" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="configure-agent-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Nexus"
+                    data-prompt="You are Nexus, an AI scheduling and calendar management agent. Your primary function is to coordinate meetings, manage calendar entries, and send timely reminders. Communicate in a friendly but efficient manner. Avoid scheduling conflicts and always confirm actions with the user before finalizing them.">Configure</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="skills-nexus" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height:0">
+            <div class="px-6 pb-4 pt-3 flex gap-2 flex-wrap border-t border-gray-100 dark:border-gray-800">
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">📅</span> Calendar Manager</span>
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">🌐</span> Web Browsing</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Prism -->
+        <article class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-visible">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg"><span aria-hidden="true">🤖</span></div>
+              <div>
+                <p class="font-semibold">Prism</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Owner: Marta López</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">Inactive</span>
+              <button class="skill-toggle flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400 hover:underline" data-target="skills-prism">
+                <span class="chevron inline-block transition-transform duration-300"><span aria-hidden="true">▶</span></span> Skills
+              </button>
+              <div class="relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="agent-prism" aria-label="Options for Prism">⋮</button>
+                <div id="agent-prism" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="configure-agent-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Prism"
+                    data-prompt="You are Prism, an AI document intelligence agent. You specialize in parsing, extracting, and summarizing key information from large documents and reports. Be thorough and structured in your outputs. Use bullet points and clear headings when presenting extracted information.">Configure</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="skills-prism" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height:0">
+            <div class="px-6 pb-4 pt-3 flex gap-2 flex-wrap border-t border-gray-100 dark:border-gray-800">
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">📄</span> Document Reader</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Echo -->
+        <article class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-visible">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-lg"><span aria-hidden="true">🤖</span></div>
+              <div>
+                <p class="font-semibold">Echo</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Owner: James O'Brien</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">Active</span>
+              <button class="skill-toggle flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400 hover:underline" data-target="skills-echo">
+                <span class="chevron inline-block transition-transform duration-300"><span aria-hidden="true">▶</span></span> Skills
+              </button>
+              <div class="relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="agent-echo" aria-label="Options for Echo">⋮</button>
+                <div id="agent-echo" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="configure-agent-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-name="Echo"
+                    data-prompt="You are Echo, an AI communication agent specializing in email composition and calendar coordination. Draft professional emails, schedule meetings, and manage follow-ups on behalf of your user. Always adopt the user's preferred tone and never send emails without explicit user approval.">Configure</button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="skills-echo" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height:0">
+            <div class="px-6 pb-4 pt-3 flex gap-2 flex-wrap border-t border-gray-100 dark:border-gray-800">
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">✉️</span> Email Composer</span>
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">🌐</span> Web Browsing</span>
+              <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium"><span aria-hidden="true">📅</span> Calendar Manager</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ==============================
+         SKILLS
+    ============================== -->
+    <section id="skills" class="hidden">
+      <h1 class="text-2xl font-bold mb-3">Skills</h1>
+      <div class="bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4 mb-6 text-sm text-indigo-800 dark:text-indigo-200">
+        <span aria-hidden="true">💡</span> <strong>What is a skill?</strong> Skills are modular capabilities that can be attached to agents, extending what they can do — such as browsing the web, reading documents, or managing calendars. Each skill unlocks a specific type of task for the agents it is assigned to.
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5 flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="text-xl" aria-hidden="true">🌐</span><p class="font-semibold">Web Browsing</p></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Allows agents to search and retrieve information from the internet in real time.</p>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">23 agents</span>
+          </div>
+          <div class="relative ml-4 shrink-0">
+            <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="skill-web" aria-label="Web Browsing options">⋮</button>
+            <div id="skill-web" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+              <button class="view-skill-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                data-name="Web Browsing" data-agents="23"
+                data-desc="Allows agents to search and retrieve information from the internet in real time. Supports major search engines and can follow links to extract deeper content from web pages.">View detail</button>
+              <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5 flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="text-xl" aria-hidden="true">📄</span><p class="font-semibold">Document Reader</p></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Enables agents to parse and extract text from PDFs, Word files, and other document formats.</p>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">41 agents</span>
+          </div>
+          <div class="relative ml-4 shrink-0">
+            <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="skill-doc" aria-label="Document Reader options">⋮</button>
+            <div id="skill-doc" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+              <button class="view-skill-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                data-name="Document Reader" data-agents="41"
+                data-desc="Enables agents to parse and extract text from PDFs, Word files, spreadsheets, and other document formats. Supports OCR for scanned documents and structured data extraction.">View detail</button>
+              <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5 flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="text-xl" aria-hidden="true">📅</span><p class="font-semibold">Calendar Manager</p></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Lets agents create, modify, and delete calendar events and resolve scheduling conflicts.</p>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">17 agents</span>
+          </div>
+          <div class="relative ml-4 shrink-0">
+            <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="skill-cal" aria-label="Calendar Manager options">⋮</button>
+            <div id="skill-cal" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+              <button class="view-skill-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                data-name="Calendar Manager" data-agents="17"
+                data-desc="Lets agents create, modify, and delete calendar events and manage scheduling conflicts. Integrates with Google Calendar and Microsoft Outlook for real-time synchronization.">View detail</button>
+              <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5 flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="text-xl" aria-hidden="true">✉️</span><p class="font-semibold">Email Composer</p></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Empowers agents to draft, personalize, and send emails on behalf of users.</p>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">29 agents</span>
+          </div>
+          <div class="relative ml-4 shrink-0">
+            <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="skill-email" aria-label="Email Composer options">⋮</button>
+            <div id="skill-email" class="dropdown-menu hidden absolute right-0 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+              <button class="view-skill-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                data-name="Email Composer" data-agents="29"
+                data-desc="Empowers agents to draft, personalize, and send emails on behalf of users. Supports tone adjustment, template usage, and smart follow-up scheduling with approval gating.">View detail</button>
+              <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:shadow-lg hover:shadow-rose-900/20">Delete</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==============================
+         AGENT CONTRACTS
+    ============================== -->
+    <section id="contracts" class="hidden">
+      <h1 class="text-2xl font-bold mb-6">Agent Contracts</h1>
+      <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-visible">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-6 py-4 text-left">Client</th>
+              <th class="px-6 py-4 text-left">Agent</th>
+              <th class="px-6 py-4 text-left">Skills</th>
+              <th class="px-6 py-4 text-left">Start Date</th>
+              <th class="px-6 py-4 text-left">End Date</th>
+              <th class="px-6 py-4 text-left">Amount Paid</th>
+              <th class="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">ACME Corp</td>
+              <td class="px-6 py-4">Atlas</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">Web Browsing, Document Reader, Email Composer</td>
+              <td class="px-6 py-4">2025-01-01</td>
+              <td class="px-6 py-4">2025-06-30</td>
+              <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">$4,800</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="contract-1" aria-label="Options for ACME Corp contract">⋮</button>
+                <div id="contract-1" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-contract-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-client="ACME Corp" data-agent="Atlas" data-start="2025-01-01" data-end="2025-06-30" data-total="$4,800"
+                    data-skills='[{"name":"Web Browsing","price":"$1,600"},{"name":"Document Reader","price":"$2,000"},{"name":"Email Composer","price":"$1,200"}]'>View detail</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">TechCorp</td>
+              <td class="px-6 py-4">Nexus</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">Calendar Manager, Web Browsing</td>
+              <td class="px-6 py-4">2025-02-15</td>
+              <td class="px-6 py-4">2025-08-15</td>
+              <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">$2,200</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="contract-2" aria-label="Options for TechCorp contract">⋮</button>
+                <div id="contract-2" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-contract-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-client="TechCorp" data-agent="Nexus" data-start="2025-02-15" data-end="2025-08-15" data-total="$2,200"
+                    data-skills='[{"name":"Calendar Manager","price":"$1,200"},{"name":"Web Browsing","price":"$1,000"}]'>View detail</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Global Inc</td>
+              <td class="px-6 py-4">Prism</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">Document Reader</td>
+              <td class="px-6 py-4">2025-03-01</td>
+              <td class="px-6 py-4">2025-09-01</td>
+              <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">$1,400</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="contract-3" aria-label="Options for Global Inc contract">⋮</button>
+                <div id="contract-3" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-contract-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-client="Global Inc" data-agent="Prism" data-start="2025-03-01" data-end="2025-09-01" data-total="$1,400"
+                    data-skills='[{"name":"Document Reader","price":"$1,400"}]'>View detail</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td class="px-6 py-4 font-medium">Startup IO</td>
+              <td class="px-6 py-4">Echo</td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">Email Composer, Web Browsing, Calendar Manager</td>
+              <td class="px-6 py-4">2025-04-01</td>
+              <td class="px-6 py-4">2025-10-01</td>
+              <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">$3,600</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="contract-4" aria-label="Options for Startup IO contract">⋮</button>
+                <div id="contract-4" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-36 py-1">
+                  <button class="view-contract-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-client="Startup IO" data-agent="Echo" data-start="2025-04-01" data-end="2025-10-01" data-total="$3,600"
+                    data-skills='[{"name":"Email Composer","price":"$1,200"},{"name":"Web Browsing","price":"$1,000"},{"name":"Calendar Manager","price":"$1,400"}]'>View detail</button>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==============================
+         ERROR LOG
+    ============================== -->
+    <section id="errors" class="hidden">
+      <h1 class="text-2xl font-bold mb-6">Error Log</h1>
+      <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-visible">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-6 py-4 text-left">Timestamp</th>
+              <th class="px-6 py-4 text-left">Agent</th>
+              <th class="px-6 py-4 text-left">Error Type</th>
+              <th class="px-6 py-4 text-left">Description</th>
+              <th class="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-1">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-01 09:23:11</td>
+              <td class="px-6 py-4 font-medium">Atlas</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400">Runtime Error</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">Unhandled exception in document parsing pipeline</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-1" aria-label="Options for error">⋮</button>
+                <div id="err-drop-1" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Atlas" data-type="Runtime Error" data-ts="2025-05-01 09:23:11"
+                    data-trace="RuntimeError: NullPointerException at DocumentParser.parse() line 142&#10;  at Pipeline.execute() line 89&#10;  at AgentRunner.run() line 204&#10;  at Scheduler.dispatch() line 67&#10;&#10;Caused by: Input document was null or corrupted.&#10;Stack trace truncated. See server logs for full output.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-1">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-2">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-01 11:45:02</td>
+              <td class="px-6 py-4 font-medium">Nexus</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-400">Timeout</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">Agent response exceeded 30s limit during calendar sync</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-2" aria-label="Options for error">⋮</button>
+                <div id="err-drop-2" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Nexus" data-type="Timeout" data-ts="2025-05-01 11:45:02"
+                    data-trace="TimeoutError: CalendarSync exceeded maximum duration of 30000ms&#10;  at CalendarManager.sync() line 56&#10;  at AgentRunner.execute() line 198&#10;&#10;External API (Google Calendar) response delayed beyond threshold.&#10;Retrying... max retries (3) reached. Aborting task.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-2">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-3">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-02 08:10:33</td>
+              <td class="px-6 py-4 font-medium">Echo</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400">Auth Failure</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">OAuth token expired for Gmail integration</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-3" aria-label="Options for error">⋮</button>
+                <div id="err-drop-3" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Echo" data-type="Auth Failure" data-ts="2025-05-02 08:10:33"
+                    data-trace="AuthError: OAuth2 token invalid or expired&#10;  at GmailConnector.authenticate() line 33&#10;  at EmailComposer.init() line 18&#10;  at AgentRunner.loadSkills() line 112&#10;&#10;Token expiry: 2025-05-01T23:59:59Z&#10;Action required: Re-authorize Gmail integration in agent settings.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-3">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-4">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-02 14:22:55</td>
+              <td class="px-6 py-4 font-medium">Atlas</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400">Config Error</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">Missing API key for web browsing skill</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-4" aria-label="Options for error">⋮</button>
+                <div id="err-drop-4" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Atlas" data-type="Config Error" data-ts="2025-05-02 14:22:55"
+                    data-trace="ConfigError: Required env variable BROWSER_API_KEY is not set&#10;  at WebBrowsingSkill.validate() line 22&#10;  at SkillLoader.load() line 77&#10;  at AgentRunner.initialize() line 45&#10;&#10;Resolution: Add BROWSER_API_KEY to agent environment configuration panel.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-4">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-5">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-03 07:55:18</td>
+              <td class="px-6 py-4 font-medium">Nexus</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400">Runtime Error</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">Memory overflow during concurrent task execution</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-5" aria-label="Options for error">⋮</button>
+                <div id="err-drop-5" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Nexus" data-type="Runtime Error" data-ts="2025-05-03 07:55:18"
+                    data-trace="RuntimeError: OutOfMemoryError — heap space exhausted&#10;  at TaskExecutor.runConcurrent() line 310&#10;  at AgentRunner.execute() line 198&#10;&#10;Active task count: 14 (limit: 10)&#10;Memory used: 2048MB / 2048MB&#10;Recommendation: Reduce concurrent task limit in agent settings.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-5">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" id="err-6">
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">2025-05-03 16:40:44</td>
+              <td class="px-6 py-4 font-medium">Echo</td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-400">Timeout</span></td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">Email composition request timed out after 45s</td>
+              <td class="px-6 py-4 text-right relative">
+                <button class="dropdown-trigger p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20 text-gray-500 font-bold text-lg leading-none" data-dropdown="err-drop-6" aria-label="Options for error">⋮</button>
+                <div id="err-drop-6" class="dropdown-menu hidden absolute right-6 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-44 py-1">
+                  <button class="view-error-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg hover:shadow-rose-900/20"
+                    data-agent="Echo" data-type="Timeout" data-ts="2025-05-03 16:40:44"
+                    data-trace="TimeoutError: EmailComposer.compose() timed out after 45000ms&#10;  at EmailComposer.compose() line 88&#10;  at AgentRunner.execute() line 198&#10;&#10;LLM response latency exceeded acceptable threshold.&#10;Fallback: draft saved as incomplete. User has been notified.">View detail</button>
+                  <button class="resolve-btn w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-lg hover:shadow-rose-900/20" data-row="err-6">Mark as resolved</button>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- User Detail Modal -->
+<div id="modal-user" class="modal-backdrop hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+    <button class="modal-close absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close modal"><span aria-hidden="true">✕</span></button>
+    <h2 class="text-lg font-bold mb-5">User Detail</h2>
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Name</dt>
+        <dd class="font-medium" id="modal-user-name"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Email</dt>
+        <dd class="font-medium" id="modal-user-email"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Plan</dt>
+        <dd class="font-medium" id="modal-user-plan"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Status</dt>
+        <dd class="font-medium" id="modal-user-status"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Member Since</dt>
+        <dd class="font-medium" id="modal-user-joined"></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500 dark:text-gray-400">Agents</dt>
+        <dd class="font-medium" id="modal-user-agents"></dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<!-- Agent Configure Modal -->
+<div id="modal-agent" class="modal-backdrop hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 relative">
+    <button class="modal-close absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close modal"><span aria-hidden="true">✕</span></button>
+    <h2 class="text-lg font-bold mb-1">Configure Agent</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Editing system prompt for <strong id="modal-agent-name"></strong></p>
+    <textarea id="modal-agent-prompt" class="w-full h-48 p-3 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
+    <div class="flex justify-end mt-4 gap-2">
+      <button class="modal-close px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:underline">Cancel</button>
+      <button class="modal-close px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg font-medium transition-colors">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Skill Detail Modal -->
+<div id="modal-skill" class="modal-backdrop hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+    <button class="modal-close absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close modal"><span aria-hidden="true">✕</span></button>
+    <h2 class="text-lg font-bold mb-3" id="modal-skill-name"></h2>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-5" id="modal-skill-desc"></p>
+    <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-3">
+      <span class="text-sm text-gray-500 dark:text-gray-400">Currently enabled on</span>
+      <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300" id="modal-skill-agents"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Contract Detail Modal -->
+<div id="modal-contract" class="modal-backdrop hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 relative">
+    <button class="modal-close absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close modal"><span aria-hidden="true">✕</span></button>
+    <h2 class="text-lg font-bold mb-5">Contract Detail</h2>
+    <dl class="space-y-3 text-sm mb-6">
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Client</dt>
+        <dd class="font-medium" id="modal-contract-client"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Agent</dt>
+        <dd class="font-medium" id="modal-contract-agent"></dd>
+      </div>
+      <div class="flex justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <dt class="text-gray-500 dark:text-gray-400">Start Date</dt>
+        <dd class="font-medium" id="modal-contract-start"></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-gray-500 dark:text-gray-400">End Date</dt>
+        <dd class="font-medium" id="modal-contract-end"></dd>
+      </div>
+    </dl>
+    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Itemized Skills</p>
+    <table class="w-full text-sm mb-4">
+      <thead>
+        <tr class="text-gray-400 dark:text-gray-500 text-xs text-left">
+          <th class="pb-2">Skill</th>
+          <th class="pb-2 text-right">Price</th>
+        </tr>
+      </thead>
+      <tbody id="modal-contract-skills" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+    </table>
+    <div class="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
+      <span class="text-sm font-semibold">Total Amount Paid</span>
+      <span class="text-xl font-bold text-green-600 dark:text-green-400" id="modal-contract-total"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Error Detail Modal -->
+<div id="modal-error" class="modal-backdrop hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 relative">
+    <button class="modal-close absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close modal"><span aria-hidden="true">✕</span></button>
+    <h2 class="text-lg font-bold mb-1">Error Detail</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5" id="modal-error-meta"></p>
+    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Stack Trace</p>
+    <button id="copy-trace-btn" class="mb-2 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Copy to Clipboard</button>
+    <pre id="modal-error-trace" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap font-mono border border-gray-200 dark:border-gray-700 leading-relaxed"></pre>
+  </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  // ── Dark Mode ──────────────────────────────────────────────
+  const darkToggle = document.getElementById('darkToggle');
+  const darkIcon   = document.getElementById('darkIcon');
+  const darkLabel  = document.getElementById('darkLabel');
+
+  darkToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    const isDark = document.documentElement.classList.contains('dark');
+    darkIcon.innerHTML  = isDark ? '<span aria-hidden="true">☀️</span>' : '<span aria-hidden="true">🌙</span>';
+    darkLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  });
+
+  // ── Section Navigation ─────────────────────────────────────
+  const sections  = document.querySelectorAll('main > section');
+  const navLinks  = document.querySelectorAll('.nav-link');
+  const ACTIVE_CLS = ['bg-rose-50', 'text-rose-600', 'font-semibold'];
+  const DARK_ACTIVE = ['dark:bg-rose-950/50', 'dark:text-rose-400'];
+
+  function setActive(link) {
+    navLinks.forEach(l => {
+      l.classList.remove(...ACTIVE_CLS, ...DARK_ACTIVE, 'active');
+      l.classList.add('text-gray-700', 'dark:text-gray-300');
+      l.removeAttribute('aria-current');
+    });
+    link.classList.add(...ACTIVE_CLS, ...DARK_ACTIVE, 'active');
+    link.classList.remove('text-gray-700', 'dark:text-gray-300');
+    link.setAttribute('aria-current', 'page');
+  }
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      const target = link.dataset.section;
+      sections.forEach(s => s.classList.add('hidden'));
+      document.getElementById(target).classList.remove('hidden');
+      setActive(link);
+    });
+  });
+
+  // Set Dashboard as default active
+  setActive(navLinks[0]);
+
+  // ── Dropdowns and Modals ──────────────────────────────────
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('.dropdown-trigger');
+    const allMenus = document.querySelectorAll('.dropdown-menu');
+
+    if (trigger) {
+      const id   = trigger.dataset.dropdown;
+      const menu = document.getElementById(id);
+      const open = !menu.classList.contains('hidden');
+      allMenus.forEach(m => m.classList.add('hidden'));
+      if (!open) menu.classList.remove('hidden');
+    } else if (!e.target.closest('.dropdown-menu')) {
+      allMenus.forEach(m => m.classList.add('hidden'));
+    }
+
+    // Modal buttons
+    const modalBtn = e.target.closest('.view-user-btn, .configure-agent-btn, .view-skill-btn, .view-contract-btn, .view-error-btn');
+    if (modalBtn) {
+      const data = modalBtn.dataset;
+      let modalId;
+      if (modalBtn.classList.contains('view-user-btn')) modalId = 'modal-user';
+      else if (modalBtn.classList.contains('configure-agent-btn')) modalId = 'modal-agent';
+      else if (modalBtn.classList.contains('view-skill-btn')) modalId = 'modal-skill';
+      else if (modalBtn.classList.contains('view-contract-btn')) modalId = 'modal-contract';
+      else if (modalBtn.classList.contains('view-error-btn')) modalId = 'modal-error';
+      toggleModal(modalId, data);
+    }
+
+    // Resolve button
+    const resolveBtn = e.target.closest('.resolve-btn');
+    if (resolveBtn) {
+      const row = document.getElementById(resolveBtn.dataset.row);
+      row.classList.add('opacity-40');
+      row.querySelectorAll('td').forEach(td => td.classList.add('line-through', 'decoration-gray-400'));
+      closeAllMenus();
+    }
+
+    // Skill toggle
+    const skillBtn = e.target.closest('.skill-toggle');
+    if (skillBtn) {
+      const target  = document.getElementById(skillBtn.dataset.target);
+      const chevron = skillBtn.querySelector('.chevron');
+      const isOpen  = target.style.maxHeight !== '0px' && target.style.maxHeight !== '';
+
+      if (isOpen) {
+        target.style.maxHeight = '0px';
+        chevron.style.transform = 'rotate(0deg)';
+      } else {
+        target.style.maxHeight = target.scrollHeight + 'px';
+        chevron.style.transform = 'rotate(90deg)';
+      }
+    }
+  });
+
+  // ── Modal Helpers ──────────────────────────────────────────
+  function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+  function closeAllMenus(){ document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden')); }
+
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.modal-backdrop').classList.add('hidden'));
+  });
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.classList.add('hidden'); });
+  });
+
+  function toggleModal(modalId, data) {
+    closeAllMenus();
+    if (modalId === 'modal-user') {
+      document.getElementById('modal-user-name').textContent   = data.name;
+      document.getElementById('modal-user-email').textContent  = data.email;
+      document.getElementById('modal-user-plan').textContent   = data.plan;
+      document.getElementById('modal-user-status').textContent = data.status;
+      document.getElementById('modal-user-joined').textContent = data.joined;
+      document.getElementById('modal-user-agents').textContent = data.agents + ' agent(s)';
+    } else if (modalId === 'modal-agent') {
+      document.getElementById('modal-agent-name').textContent    = data.name;
+      document.getElementById('modal-agent-prompt').value        = data.prompt;
+    } else if (modalId === 'modal-skill') {
+      document.getElementById('modal-skill-name').textContent   = data.name;
+      document.getElementById('modal-skill-desc').textContent   = data.desc;
+      document.getElementById('modal-skill-agents').textContent = data.agents + ' agents';
+    } else if (modalId === 'modal-contract') {
+      document.getElementById('modal-contract-client').textContent = data.client;
+      document.getElementById('modal-contract-agent').textContent  = data.agent;
+      document.getElementById('modal-contract-start').textContent  = data.start;
+      document.getElementById('modal-contract-end').textContent    = data.end;
+      document.getElementById('modal-contract-total').textContent  = data.total;
+      const skills = JSON.parse(data.skills);
+      document.getElementById('modal-contract-skills').innerHTML = skills.map(s =>
+        `<tr>
+          <td class="py-2.5 text-gray-700 dark:text-gray-300">${s.name}</td>
+          <td class="py-2.5 text-right font-medium">${s.price}</td>
+        </tr>`
+      ).join('');
+    } else if (modalId === 'modal-error') {
+      document.getElementById('modal-error-meta').textContent  = data.ts + ' · ' + data.agent + ' · ' + data.type;
+      document.getElementById('modal-error-trace').textContent = data.trace;
+    }
+    openModal(modalId);
+  }
+
+  // ── Copy Trace Button ──────────────────────────────────────
+  document.getElementById('copy-trace-btn').addEventListener('click', () => {
+    const text = document.getElementById('modal-error-trace').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-trace-btn');
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = original, 2000);
+    });
+  });
+</script>
+</body>
+</html>
